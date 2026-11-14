@@ -11,14 +11,14 @@ set "PYTHON_DIR=%LOCALAPPDATA%\Programs\Python\Python311"
 
 set "PATH=%JAVA_HOME%\bin;%MYSQL_DIR%\bin;%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%"
 
-:: Check if MySQL is listening on port 3306
-netstat -ano | findstr /R /C:":3306 .*LISTENING" >nul
+:: Check if MariaDB is listening on port 3307
+netstat -ano | findstr /R /C:":3307 .*LISTENING" >nul
 if errorlevel 1 (
-    echo [1/3] Starting MySQL database server...
-    start /B "" "%MYSQL_DIR%\bin\mysqld.exe" --datadir="%MYSQL_DIR%\data" --port=3306
+    echo [1/3] Starting MariaDB database server on port 3307...
+    start /B "" "%MYSQL_DIR%\bin\mysqld.exe" --datadir="%MYSQL_DIR%\data" --port=3307
     timeout /t 3 /nobreak >nul
 ) else (
-    echo [1/3] MySQL database server is already running.
+    echo [1/3] MariaDB database server is already running on port 3307.
 )
 
 echo [2/3] Opening browser at http://localhost:8080...
