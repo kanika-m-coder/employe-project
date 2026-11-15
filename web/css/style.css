@@ -1274,15 +1274,42 @@ input:focus, select:focus {
 }
 
 .bar {
-  display: flex;
-  gap: 12px;
+  display: inline-flex;
+  gap: 10px;
   margin-bottom: 18px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
 }
 
 .bar input, .bar select {
-  max-width: 260px;
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.card-header-row .bar {
+  margin-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+/* Specific filter element sizing for one-line alignment */
+.bar #q {
+  width: 220px;
+}
+
+.bar #fd {
+  width: 175px;
+}
+
+.bar #fe {
+  width: 180px;
+}
+
+.bar #from, .bar #to {
+  width: 145px;
 }
 
 /* Summary Chips */
@@ -1657,6 +1684,16 @@ input:focus, select:focus {
   }
   .cards {
     grid-template-columns: 1fr;
+  }
+  .card-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .card-header-row .bar {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 6px;
   }
 }
 
