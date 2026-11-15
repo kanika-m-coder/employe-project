@@ -207,7 +207,7 @@ public class Main {
     if (m.equals("GET")) {
       if (s.length > 1) return json("SELECT e.emp_id empId, e.emp_name name, COALESCE(SUM(a.status='Absent'),0) absent, COALESCE(SUM(a.status='Half Day'),0) halfDays, COALESCE(SUM(a.status='On Leave'),0) onLeave FROM employees e LEFT JOIN attendance a ON a.emp_id=e.emp_id GROUP BY e.emp_id, e.emp_name ORDER BY absent DESC");
       String e = g(b, "emp");
-      return json("SELECT l.leave_id id, e.emp_id empId, e.emp_name name, l.leave_type type, l.start_date startDate, l.end_date endDate, l.total_days days, l.reason, l.status FROM leave_records l JOIN employees e ON e.emp_id=l.emp_id WHERE (?='' OR l.emp_id=?) ORDER BY l.start_date DESC", e, e);
+      return json("SELECT l.leave_id id, e.emp_id empId, e.emp_name name, d.dept_name department, e.designation, l.leave_type type, l.start_date startDate, l.end_date endDate, l.total_days days, l.reason, l.status FROM leave_records l JOIN employees e ON e.emp_id=l.emp_id JOIN departments d ON d.dept_id=e.dept_id WHERE (?='' OR l.emp_id=?) ORDER BY l.start_date DESC", e, e);
     }
     if (m.equals("DELETE")) { exec("DELETE FROM leave_records WHERE leave_id=?", s[1]); return OK; }
     if (m.equals("PUT")) {
