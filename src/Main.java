@@ -210,6 +210,27 @@ public class Main {
       return json("SELECT l.leave_id id, e.emp_id empId, e.emp_name name, l.leave_type type, l.start_date startDate, l.end_date endDate, l.total_days days, l.reason, l.status FROM leave_records l JOIN employees e ON e.emp_id=l.emp_id WHERE (?='' OR l.emp_id=?) ORDER BY l.start_date DESC", e, e);
     }
     if (m.equals("DELETE")) { exec("DELETE FROM leave_records WHERE leave_id=?", s[1]); return OK; }
+    if (m.equals("PUT")) {
+      need(b, "status");
+      String st = g(b, "status"), id = s[1];
+      exec("UPDATE leave_records SET status=? WHERE leave_id=?", st, id);
+      if (st.equals("Approved")) {
+        try (Connection c = db(); PreparedStatement ps = c.prepareStatement("SELECT emp_id, leave_type, start_date, end_date FROM leave_records WHERE leave_id=?")) {
+          ps.setObject(1, id);
+          try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+              String emp = rs.getString(1), type = rs.getString(2);
+              LocalDate a = LocalDate.parse(rs.getString(3)), z = LocalDate.parse(rs.getString(4));
+              for (LocalDate d = a; !d.isAfter(z); d = d.plusDays(1)) {
+                if (d.getDayOfWeek() == DayOfWeek.SATURDAY || d.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+                mark(emp, d, type.equals("Loss of Pay") ? "Absent" : "On Leave");
+              }
+            }
+          }
+        }
+      }
+      return OK;
+    }
     need(b, "empId", "type", "startDate", "endDate");
     LocalDate a = LocalDate.parse(g(b, "startDate")), z = LocalDate.parse(g(b, "endDate"));
     if (z.isBefore(a)) throw new IllegalArgumentException("End date cannot be before the start date");

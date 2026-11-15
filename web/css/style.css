@@ -1273,43 +1273,48 @@ input:focus, select:focus {
   padding-top: 4px;
 }
 
-.bar {
-  display: inline-flex;
-  gap: 10px;
+.bar, .filter-bar-inline {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 10px !important;
   margin-bottom: 18px;
-  flex-wrap: nowrap;
-  align-items: center;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
 }
 
-.bar input, .bar select {
-  width: auto;
-  flex: 0 0 auto;
+.bar input, .bar select,
+.filter-bar-inline input, .filter-bar-inline select {
+  width: auto !important;
+  flex: 0 0 auto !important;
+  max-width: none !important;
 }
 
-.card-header-row .bar {
-  margin-bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
+.card-header-row .bar, .card-header-row .filter-bar-inline {
+  margin-bottom: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 /* Specific filter element sizing for one-line alignment */
-.bar #q {
-  width: 220px;
+.bar #q, .filter-bar-inline #q {
+  width: 230px !important;
 }
 
-.bar #fd {
-  width: 175px;
+.bar #fd, .filter-bar-inline #fd {
+  width: 180px !important;
 }
 
-.bar #fe {
-  width: 180px;
+.bar #fe, .filter-bar-inline #fe {
+  width: 190px !important;
 }
 
-.bar #from, .bar #to {
-  width: 145px;
+.bar #from, .bar #to,
+.filter-bar-inline #from, .filter-bar-inline #to {
+  width: 145px !important;
 }
 
 /* Summary Chips */
