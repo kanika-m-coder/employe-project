@@ -159,10 +159,27 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
 
       <div class="header-right">
-        <button type="button" class="header-icon-btn" title="Notifications">
-          ${ic(ICONS.bell)}
-          <span class="notification-indicator"></span>
-        </button>
+        <!-- Notification Dropdown -->
+        <div class="notification-dropdown-wrapper">
+          <button type="button" class="header-icon-btn" id="btnNotification" onclick="toggleNotifications(event)" title="Notifications" aria-expanded="false" aria-label="Notifications">
+            ${ic(ICONS.bell)}
+            <span class="notification-indicator" id="notifDot" style="display:none"></span>
+          </button>
+          <div class="notification-dropdown" id="notifDropdown">
+            <div class="notif-header">
+              <h4>
+                <span>Notifications</span>
+                <span class="notif-badge-count" id="notifCount">0</span>
+              </h4>
+              <button type="button" class="notif-mark-read" onclick="markAllNotificationsRead(event)">Mark all read</button>
+            </div>
+            <div class="notif-list" id="notifList"></div>
+            <div class="notif-footer">
+              <a href="reports.html">View System Audit & Reports →</a>
+            </div>
+          </div>
+        </div>
+
         <button type="button" class="header-icon-btn" onclick="openSettingsModal()" title="System Settings">
           ${ic(ICONS.settings)}
         </button>
@@ -173,6 +190,191 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
+
+    // Initialize Notification Feed
+    initNotifications();
+  }
+});
+
+// Global Search Handler
+window.handleGlobalSearch = query => {
+  if (!query || !query.trim()) return;
+  const q = encodeURIComponent(query.trim());
+  if (location.pathname.endsWith("employees.html")) {
+    const qEl = document.getElementById("q");
+    if (qEl) {
+      qEl.value = query.trim();
+      if (typeof load === "function") load();
+    }
+  } else {
+    location.href = `employees.html?q=${q}`;
+  }
+};
+
+// Notification System Core
+let appNotifications = [];
+
+async function initNotifications() {
+  appNotifications = [];
+  try {
+    if (user.role === "ADMIN") {
+      // 1. Pending Leaves Notice
+      const leaves = await api("/leave").catch(() => []);
+      const pending = leaves.filter(l => l.status === "Pending");
+      pending.forEach(l => {
+        appNotifications.push({
+          id: "leave-" + l.id,
+          type: "leave",
+          title: "Pending Leave Approval",
+          desc: `${l.name} (#${l.empId}) requested ${l.type} leave (${l.days} day${l.days === 1 ? '' : 's'}).`,
+          time: l.startDate || "Recent",
+          link: "leave.html",
+          unread: true
+        });
+      });
+
+      // 2. Absences Alert from Dashboard
+      const dash = await api("/dashboard").catch(() => null);
+      if (dash && dash.absent > 0) {
+        appNotifications.push({
+          id: "att-absent",
+          type: "attendance",
+          title: "Attendance Notice",
+          desc: `${dash.absent} employee(s) marked absent as of ${dash.date}.`,
+          time: "Today",
+          link: "attendance.html",
+          unread: true
+        });
+      }
+
+      // 3. Monthly Payroll Engine Status
+      if (dash) {
+        appNotifications.push({
+          id: "payroll-engine",
+          type: "payroll",
+          title: "Payroll Register Status",
+          desc: `Active period payroll net total: ₹${Number(dash.monthlyPayroll || 0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}.`,
+          time: dash.date || "Active",
+          link: "payroll.html",
+          unread: false
+        });
+      }
+
+      // 4. System Rule Engine Active
+      appNotifications.push({
+        id: "sys-rules",
+        type: "system",
+        title: "Statutory Rules Active",
+        desc: "HRA 20%, DA 10%, PF 12% deduction formulas in effect.",
+        time: "Verified",
+        link: "payroll.html",
+        unread: false
+      });
+    } else {
+      // Employee notifications
+      const myLeaves = await api(`/leave?emp=${user.empId}`).catch(() => []);
+      myLeaves.slice(0, 3).forEach(l => {
+        appNotifications.push({
+          id: "myleave-" + l.id,
+          type: "leave",
+          title: `Leave Status: ${l.status}`,
+          desc: `Your ${l.type} leave (${l.startDate} to ${l.endDate}) is marked ${l.status}.`,
+          time: l.startDate || "Recent",
+          link: "leave.html",
+          unread: l.status === "Pending"
+        });
+      });
+
+      appNotifications.push({
+        id: "emp-welcome",
+        type: "system",
+        title: "Employee Portal Active",
+        desc: "You can track your duty attendance and submit leave requests.",
+        time: "Active",
+        link: "attendance.html",
+        unread: false
+      });
+    }
+  } catch (err) {
+    console.warn("Could not load notifications:", err);
+  }
+
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const notifDot = document.getElementById("notifDot");
+  const notifCount = document.getElementById("notifCount");
+  const notifList = document.getElementById("notifList");
+  if (!notifList) return;
+
+  const unreadCount = appNotifications.filter(n => n.unread).length;
+  if (notifDot) {
+    notifDot.style.display = unreadCount > 0 ? "block" : "none";
+  }
+  if (notifCount) {
+    notifCount.textContent = unreadCount > 0 ? `${unreadCount} new` : "0";
+  }
+
+  if (appNotifications.length === 0) {
+    notifList.innerHTML = `<div class="notif-empty">No notifications. All systems up to date.</div>`;
+    return;
+  }
+
+  const icons = {
+    leave: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="12" y1="6" x2="16" y2="6"/><line x1="12" y1="10" x2="16" y2="10"/>',
+    attendance: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+    payroll: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/>',
+    system: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>'
+  };
+
+  notifList.innerHTML = appNotifications.map(n => `
+    <a href="${n.link}" class="notif-item ${n.unread ? 'unread' : ''}" onclick="onNotificationClick('${n.id}')">
+      <div class="notif-icon-box ${n.type}">
+        ${ic(icons[n.type] || icons.system)}
+      </div>
+      <div class="notif-content">
+        <div class="notif-title-row">
+          <span class="notif-title">${esc(n.title)}</span>
+          <span class="notif-time">${esc(n.time)}</span>
+        </div>
+        <p class="notif-desc">${esc(n.desc)}</p>
+      </div>
+      ${n.unread ? '<div class="notif-unread-dot"></div>' : ''}
+    </a>
+  `).join("");
+}
+
+function toggleNotifications(e) {
+  if (e) e.stopPropagation();
+  const dropdown = document.getElementById("notifDropdown");
+  const btn = document.getElementById("btnNotification");
+  if (!dropdown) return;
+  const isExpanded = dropdown.classList.toggle("active");
+  if (btn) btn.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+}
+
+function markAllNotificationsRead(e) {
+  if (e) e.stopPropagation();
+  appNotifications.forEach(n => n.unread = false);
+  renderNotifications();
+  toast("All notifications marked as read");
+}
+
+function onNotificationClick(id) {
+  const item = appNotifications.find(n => n.id === id);
+  if (item) item.unread = false;
+  renderNotifications();
+}
+
+// Close notifications when clicking anywhere outside
+document.addEventListener("click", e => {
+  const wrapper = document.querySelector(".notification-dropdown-wrapper");
+  const dropdown = document.getElementById("notifDropdown");
+  const btn = document.getElementById("btnNotification");
+  if (dropdown && dropdown.classList.contains("active") && wrapper && !wrapper.contains(e.target)) {
+    dropdown.classList.remove("active");
+    if (btn) btn.setAttribute("aria-expanded", "false");
   }
 });
 
