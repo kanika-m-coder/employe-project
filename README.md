@@ -43,16 +43,21 @@ Install dependencies for the analysis engine:
 pip install -r python/requirements.txt
 ```
 
-### 4. Run the Application
-You can start the application with the one-click batch launcher:
+### 4. Run with ONE Command in VS Code
+Open the VS Code terminal (`Ctrl + \``) and run:
 ```cmd
-run.bat
+.\run.bat
 ```
-Or start the Java server directly:
-```cmd
-java -cp "lib/*" src/Main.java
-```
-Then open your web browser at **http://localhost:8080**.
+*(Or in PowerShell: `.\run.ps1`)*
+
+**What this single command handles automatically:**
+1. ✅ Automatically configures Java, MariaDB, and Python paths.
+2. ✅ Checks and starts the database server on port 3307.
+3. ✅ Verifies and auto-initializes the database schema & sample data if missing.
+4. ✅ Automatically opens your browser at **http://localhost:8080**.
+5. ✅ Launches the AttendPay Java Web Server.
+
+*(Shortcut in VS Code: Press **`Ctrl + Shift + B`** to run AttendPay instantly!)*
 
 ---
 
