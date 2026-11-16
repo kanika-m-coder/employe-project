@@ -1,4 +1,4 @@
-// AttendPay - Modern SaaS Dashboard Visualizations
+// AttendPay Dashboard Visualizations
 (async () => {
   try {
     const d = await api("/dashboard");

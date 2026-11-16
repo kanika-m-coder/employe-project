@@ -4,7 +4,7 @@ A comprehensive Employee Attendance, Leave Management, and Payroll Analysis Plat
 
 ---
 
-## 🎨 Enterprise SaaS Features
+## 🎨 Platform Features
 - **Executive Dashboard:** Real-time statistics, monthly attendance trend charts, status distributions, and department breakdowns.
 - **Dark Midnight Sidebar:** Intuitive navigation with modern Lucide icons, responsive drawer, and active state indicators.
 - **Attendance & Leave Management:** Complete leave requests, multi-level approvals, and daily attendance duty logs.

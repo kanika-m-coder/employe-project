@@ -1,4 +1,4 @@
-// AttendPay - Enterprise SaaS Frontend Core
+// AttendPay Frontend Core
 const user = JSON.parse(sessionStorage.getItem("user") || "null");
 const isAuthPage = location.pathname.endsWith("login.html") || 
                    location.pathname.endsWith("register.html") || 
@@ -53,7 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <a href="index.html" class="brand">
           <div class="brand-icon-box">A</div>
           <div class="brand-text">Attend<span>Pay</span></div>
-          <span class="brand-badge-tag">SaaS</span>
         </a>
       </div>
       
